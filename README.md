@@ -1,7 +1,6 @@
 # mongoose-exists
 
 [![Build Status](https://travis-ci.org/lykmapipo/mongoose-exists.svg?branch=master)](https://travis-ci.org/lykmapipo/mongoose-exists)
-
 [![Dependency Status](https://img.shields.io/david/lykmapipo/mongoose-exists.svg?style=flat)](https://david-dm.org/lykmapipo/mongoose-exists)
 [![npm version](https://badge.fury.io/js/mongoose-exists.svg)](https://badge.fury.io/js/mongoose-exists)
 
