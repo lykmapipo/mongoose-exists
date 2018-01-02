@@ -59,42 +59,46 @@ module.exports = exports = function (schema /*, options*/ ) {
       const ref = schemaType.options.ref;
 
       //add model exists async validation
-      schema.path(schemaPath).validate(function (value, cb) {
+      schema.path(schemaPath).validate({
+        isAsync: true,
+        validator: function (value, cb) {
 
-        //use path with value only
-        const id = value || _.get(value, '_id');
-        if (id) {
-          //obtain ref mongoose model
-          const Model = mongoose.model(ref);
+          //use path with value only
+          const id = value || _.get(value, '_id');
+          if (id) {
+            //obtain ref mongoose model
+            const Model = mongoose.model(ref);
 
-          //try to lookup for the model by its id
-          Model
-            .findById(id)
-            .select('_id')
-            .lean()
-            .exec(function (error, doc) {
+            //try to lookup for the model by its id
+            Model
+              .findById(id)
+              .select('_id')
+              .lean()
+              .exec(function (error, doc) {
 
-              //handle query errors
-              if (error) {
-                cb(false, error);
-              }
-
-              //handle ref existance
-              else {
-                //document already exists
-                if (doc) {
-                  cb(true);
+                //handle query errors
+                if (error) {
+                  cb(false, error);
                 }
-                //document not saved already
+
+                //handle ref existance
                 else {
-                  cb(false);
+                  //document already exists
+                  if (doc) {
+                    cb(true);
+                  }
+                  //document not saved already
+                  else {
+                    cb(false);
+                  }
                 }
-              }
 
-            });
-        }
+              });
+          }
 
-      }, '{PATH} with id {VALUE} does not exists');
+        },
+        message: '{PATH} with id {VALUE} does not exists'
+      });
 
     }
 

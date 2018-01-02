@@ -1,6 +1,6 @@
 {
   "name": "mongoose-exists",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "mongoose validation to ensure referenced object id exists",
   "keywords": [
     "mongoose",
@@ -46,8 +46,8 @@
     "grunt-contrib-watch": "^1.0.0",
     "grunt-mocha-test": "^0.13.3",
     "jshint-stylish": "^2.2.1",
-    "mocha": "^4.0.1",
-    "mongoose": "^4.12.3"
+    "mocha": "^4.1.0",
+    "mongoose": "^5.0.0-rc0"
   },
   "dependencies": {
     "lodash": "^4.17.4"

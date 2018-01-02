@@ -9,6 +9,7 @@ mongoose validation to ensure referenced object id exists.
 ## Requirements
 
 - NodeJS v6.5+
+- mongoose v4.9.0+
 
 ## Install
 ```sh
