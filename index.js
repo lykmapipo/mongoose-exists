@@ -78,7 +78,7 @@ module.exports = exports = function (schema /*, options*/ ) {
 
                 //handle query errors
                 if (error) {
-                  cb(false, error);
+                  cb(false /*, error*/ );
                 }
 
                 //handle ref existance
