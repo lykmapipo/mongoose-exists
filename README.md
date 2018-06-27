@@ -13,7 +13,7 @@ mongoose validation to ensure referenced object id exists.
 
 ## Install
 ```sh
-$ npm install --save mongoose-exists
+$ npm install --save mongoose mongoose-exists
 ```
 
 ## Usage
