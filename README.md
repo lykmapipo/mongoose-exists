@@ -25,13 +25,20 @@ const mongoose = require('mongoose');
 const exists = require('mongoose-exists');
 const Schema = mongoose.Schema;
 
+...
+
+const FriendSchema = new Schema({
+  type: { type: String },
+  person: { type: ObjectId, ref: 'Person', exists: true }
+});
 
 const PersonSchema = new Schema({
-  father: {
-    type: ObjectId,
-    ref: 'Person',
-    exists: true //will validate that id already exists before save
-  }
+  name: { type: String },
+  father: { type: ObjectId, ref: 'Person', exists: true },
+  relatives: { type: [ObjectId], ref: 'Person', exists: true },
+  referees: [{ type: ObjectId, ref: 'Person', exists: true }],
+  friends: { type: [FriendSchema] },
+  neighbours: [FriendSchema]
 });
 PersonSchema.plugin(exists);
 
