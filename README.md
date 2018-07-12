@@ -6,6 +6,8 @@
 
 mongoose validation to ensure referenced object id exists.
 
+*Note!: Path to be checked for existance must have `ref` and `exists` options*
+
 ## Requirements
 
 - NodeJS v6.5+
@@ -20,19 +22,28 @@ $ npm install --save mongoose mongoose-exists
 
 ```javascript
 const mongoose = require('mongoose');
+const exists = require('mongoose-exists');
 const Schema = mongoose.Schema;
 
-//apply mongoose-exists plugin to mongoose
-mongoose.plugin(require('mongoose-exists'));
+
+const PersonSchema = new Schema({
+  father: {
+    type: ObjectId,
+    ref: 'Person',
+    exists: true //will validate that id already exists before save
+  }
+});
+PersonSchema.plugin(exists);
 
 ...
 
-const PersonSchema = new Schema({
-    parent:{
-        type: ObjectId,
-        ref: 'Person',
-        exists: true  //validate that id already exists before save
-    }
+Person.create({}, function (error) {
+  expect(error).to.exist;
+  expect(error.errors.father).to.exist;
+  expect(error.name).to.be.equal('ValidationError');
+  expect(error.errors.father.message)
+    .to.be.equal('father with id ' + person.father +
+      ' does not exists');
 });
 
 ...
