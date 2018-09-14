@@ -35,6 +35,8 @@ const FriendSchema = new Schema({
 const PersonSchema = new Schema({
   name: { type: String },
   father: { type: ObjectId, ref: 'Person', exists: true },
+  mother: { type: ObjectId, ref: 'Person', exists: [true, 'Not Exists'] },
+  sister: { type: ObjectId, ref: 'Person', exists: {message: 'Not Exists'} },
   relatives: { type: [ObjectId], ref: 'Person', exists: true },
   referees: [{ type: ObjectId, ref: 'Person', exists: true }],
   friends: { type: [FriendSchema] },

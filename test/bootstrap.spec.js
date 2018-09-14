@@ -8,7 +8,7 @@ process.env.NODE_ENV = 'test';
 /* setup mongoose */
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-// mongoose.set('debug', true);
+// mongoose.set('debug', true);;
 
 
 function wipe(done) {
@@ -20,15 +20,16 @@ function wipe(done) {
 }
 
 
-/* setup database */
+//setup database
 before(function (done) {
-  mongoose.connect('mongodb://localhost/mongoose-exists', done);
+  mongoose.connect('mongodb://localhost/mongoose-exists', { useNewUrlParser: true },
+    done);
 });
 
 
-/* clear database */
+// clear database
 before(wipe);
 
 
-/* clear database */
+// clear database
 after(wipe);

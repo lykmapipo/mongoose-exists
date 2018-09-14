@@ -23,6 +23,8 @@ const FriendSchema = new Schema({
 const PersonSchema = new Schema({
   name: { type: String },
   father: { type: ObjectId, ref: 'Person', exists: true },
+  mother: { type: ObjectId, ref: 'Person', exists: [true, 'NOT EXIST'] },
+  sister: { type: ObjectId, ref: 'Person', exists: { message: 'NOT EXIST' } },
   relatives: { type: [ObjectId], ref: 'Person', exists: true },
   referees: [{ type: ObjectId, ref: 'Person', exists: true }],
   friends: { type: [FriendSchema] },
@@ -34,9 +36,9 @@ const Person = mongoose.model('Person', PersonSchema);
 
 describe('mongoose-exists', function () {
 
-  let father = {
-    name: faker.company.companyName()
-  };
+  let father = { name: faker.company.companyName() };
+  let mother = { name: faker.company.companyName() };
+  let sister = { name: faker.company.companyName() };
 
   let relatives = [{
     name: faker.name.findName()
@@ -62,30 +64,44 @@ describe('mongoose-exists', function () {
     name: faker.name.findName()
   }];
 
-  before(function (done) {
-    Person.create(father, function (error, created) {
+  before((done) => {
+    Person.create(father, (error, created) => {
       father = created;
       done(error, created);
     });
   });
 
-  before(function (done) {
-    Person.insertMany(relatives, function (error, created) {
+  before((done) => {
+    Person.create(mother, (error, created) => {
+      mother = created;
+      done(error, created);
+    });
+  });
+
+  before((done) => {
+    Person.create(sister, (error, created) => {
+      sister = created;
+      done(error, created);
+    });
+  });
+
+  before((done) => {
+    Person.insertMany(relatives, (error, created) => {
       relatives = created;
       done(error, created);
     });
   });
 
-  before(function (done) {
-    Person.insertMany(referees, function (error, created) {
+  before((done) => {
+    Person.insertMany(referees, (error, created) => {
       referees = created;
       done(error, created);
     });
   });
 
-  before(function (done) {
-    Person.insertMany(friends, function (error, created) {
-      friends = _.map(created, function (friend) {
+  before((done) => {
+    Person.insertMany(friends, (error, created) => {
+      friends = _.map(created, (friend) => {
         return {
           type: faker.hacker.ingverb(),
           person: friend
@@ -95,9 +111,9 @@ describe('mongoose-exists', function () {
     });
   });
 
-  before(function (done) {
-    Person.insertMany(neighbours, function (error, created) {
-      neighbours = _.map(created, function (neighbour) {
+  before((done) => {
+    Person.insertMany(neighbours, (error, created) => {
+      neighbours = _.map(created, (neighbour) => {
         return {
           type: faker.hacker.ingverb(),
           person: neighbour
@@ -107,131 +123,147 @@ describe('mongoose-exists', function () {
     });
   });
 
-  it('should be able to create with a ref that already exists',
-    function (done) {
+  it('should be able to create with a ref that already exists', (done) => {
+    const person = {
+      name: faker.company.companyName(),
+      father: father,
+      mother: mother,
+      sister: sister,
+      relatives: relatives,
+      referees: referees,
+      friends: friends,
+      neighbours: neighbours
+    };
 
+    Person.create(person, (error, created) => {
+      expect(error).to.not.exist;
+      expect(created).to.exist;
+      expect(created._id).to.exist;
+      expect(created.name).to.be.equal(person.name);
+      done(error, created);
+    });
+
+  });
+
+  it('should fail to save with ref that not exists', (done) => {
+    const person = {
+      name: faker.company.companyName(),
+      father: new mongoose.Types.ObjectId()
+    };
+
+    Person.create(person, (error /*, created*/ ) => {
+      expect(error).to.exist;
+      expect(error.errors.father).to.exist;
+      expect(error.name).to.be.equal('ValidationError');
+      expect(error.errors.father.message)
+        .to.be.equal('father with id ' + person.father +
+          ' does not exists');
+      done();
+    });
+  });
+
+  it(
+    'should fail to save with ref that not exists - custom error message',
+    (done) => {
       const person = {
+        name: faker.company.companyName(),
         father: father,
-        name: faker.company.companyName(),
-        relatives: relatives,
-        referees: referees,
-        friends: friends,
-        neighbours: neighbours
+        mother: new mongoose.Types.ObjectId()
       };
 
-      Person.create(person, function (error, created) {
-
-        expect(error).to.not.exist;
-        expect(created).to.exist;
-        expect(created._id).to.exist;
-        expect(created.name).to.be.equal(person.name);
-
-        done(error, created);
-
-      });
-
-    });
-
-  it('should fail to save with ref that not exists',
-    function (done) {
-
-      const person = {
-        father: new mongoose.Types.ObjectId(),
-        name: faker.company.companyName()
-      };
-
-      Person.create(person, function (error /*, created*/ ) {
-
+      Person.create(person, (error /*, created*/ ) => {
         expect(error).to.exist;
-        expect(error.errors.father).to.exist;
+        expect(error.errors.mother).to.exist;
         expect(error.name).to.be.equal('ValidationError');
-        expect(error.errors.father.message)
-          .to.be.equal('father with id ' + person.father +
-            ' does not exists');
-
+        expect(error.errors.mother.message).to.be.equal('NOT EXIST');
         done();
-
       });
-
     });
 
-  it('should fail to save with ref that not exists',
-    function (done) {
-
+  it(
+    'should fail to save with ref that not exists - custom error message',
+    (done) => {
       const person = {
-        father: father._id,
         name: faker.company.companyName(),
-        relatives: [new mongoose.Types.ObjectId(), new mongoose.Types.ObjectId()]
+        father: father,
+        mother: mother,
+        sister: new mongoose.Types.ObjectId()
       };
 
-      Person.create(person, function (error /*, created*/ ) {
-
+      Person.create(person, (error /*, created*/ ) => {
         expect(error).to.exist;
-        expect(error.errors.relatives).to.exist;
+        expect(error.errors.sister).to.exist;
         expect(error.name).to.be.equal('ValidationError');
-        expect(error.errors.relatives.message)
-          .to.be.equal('relatives with id ' + person.relatives +
-            ' does not exists');
-
+        expect(error.errors.sister.message).to.be.equal('NOT EXIST');
         done();
-
       });
-
     });
 
-  it('should fail to save with ref that not exists',
-    function (done) {
+  it('should fail to save with ref that not exists', (done) => {
+    const person = {
+      name: faker.company.companyName(),
+      father: father._id,
+      mother: mother._id,
+      sister: sister._id,
+      relatives: [new mongoose.Types.ObjectId(), new mongoose.Types.ObjectId()]
+    };
 
-      const person = {
-        father: father._id,
-        name: faker.company.companyName(),
-        referees: [new mongoose.Types.ObjectId(), new mongoose.Types.ObjectId()],
-      };
-
-      Person.create(person, function (error /*, created*/ ) {
-
-        expect(error).to.exist;
-        expect(error.errors.referees).to.exist;
-        expect(error.name).to.be.equal('ValidationError');
-        expect(error.errors.referees.message)
-          .to.be.equal('referees with id ' + person.referees +
-            ' does not exists');
-
-        done();
-
-      });
-
+    Person.create(person, (error /*, created*/ ) => {
+      expect(error).to.exist;
+      expect(error.errors.relatives).to.exist;
+      expect(error.name).to.be.equal('ValidationError');
+      expect(error.errors.relatives.message)
+        .to.be.equal('relatives with id ' + person.relatives +
+          ' does not exists');
+      done();
     });
+  });
 
-  it('should fail to save with ref that not exists',
-    function (done) {
+  it('should fail to save with ref that not exists', (done) => {
+    const person = {
+      name: faker.company.companyName(),
+      father: father._id,
+      mother: mother._id,
+      sister: sister._id,
+      referees: [new mongoose.Types.ObjectId(), new mongoose.Types.ObjectId()],
+    };
 
-      const person = {
-        father: father._id,
-        name: faker.company.companyName(),
-        friends: [{
-          type: faker.hacker.ingverb(),
-          person: new mongoose.Types.ObjectId()
-        }],
-      };
-
-      Person.create(person, function (error /*, created*/ ) {
-
-        expect(error).to.exist;
-        expect(error.errors['friends.0.person']).to.exist;
-        expect(error.name).to.be.equal('ValidationError');
-        expect(error.errors['friends.0.person'].message)
-          .to.be.equal('person with id ' + person.friends[0].person +
-            ' does not exists');
-
-        done();
-
-      });
-
+    Person.create(person, (error /*, created*/ ) => {
+      expect(error).to.exist;
+      expect(error.errors.referees).to.exist;
+      expect(error.name).to.be.equal('ValidationError');
+      expect(error.errors.referees.message)
+        .to.be.equal('referees with id ' + person.referees +
+          ' does not exists');
+      done();
     });
+  });
 
-  after(function (done) {
-    Person.remove(done);
+  it('should fail to save with ref that not exists', (done) => {
+    const person = {
+      name: faker.company.companyName(),
+      father: father._id,
+      mother: mother._id,
+      sister: sister._id,
+      friends: [{
+        type: faker.hacker.ingverb(),
+        person: new mongoose.Types.ObjectId()
+      }],
+    };
+
+    Person.create(person, (error /*, created*/ ) => {
+      expect(error).to.exist;
+      expect(error.errors['friends.0.person']).to.exist;
+      expect(error.name).to.be.equal('ValidationError');
+      expect(error.errors['friends.0.person'].message)
+        .to.be.equal('person with id ' + person.friends[0].person +
+          ' does not exists');
+      done();
+    });
+  });
+
+  after((done) => {
+    Person.deleteMany(done);
   });
 
 });

@@ -11,21 +11,54 @@
  * @example
  *
  * const PersonSchema = new Schema({
- *   
  *   father: {
  *     type: ObjectId,
  *     ref: 'Person',
  *     exists: true
  *   }
- *   
  * });
+ * 
  */
+
+
+/* @todo attach validator message to mongoose error messages */
+/* @todo support conditional exists */
+/* @todo support set fresh existed full document */
+/* @todo add ObjectId schema validations */
 
 
 /* dependencies */
 const _ = require('lodash');
 const mongoose = require('mongoose');
 const VALIDATOR_TYPE = 'exists';
+const VALIDATOR_MESSAGE = '{PATH} with id {VALUE} does not exists';
+
+
+//handle exists schema option
+function normalizeExistOption(option) {
+
+  //handle boolean options
+  if (_.isBoolean(option)) {
+    return { exists: true };
+  }
+
+  //handle array option
+  if (_.isArray(option)) {
+    return {
+      exists: _.first(option),
+      message: _.last(option),
+    };
+  }
+
+  //handle object option
+  if (_.isPlainObject(option)) {
+    return _.merge({}, { exists: true }, option);
+  }
+
+  //bounce if not understood option
+  return { exists: false };
+
+}
 
 
 module.exports = exports = function (schema /*, options*/ ) {
@@ -57,11 +90,11 @@ module.exports = exports = function (schema /*, options*/ ) {
     //ensure schema type is objectid `ref`
     const hasRef = !_.isEmpty(schemaTypeOptions.ref);
 
-    //check for exist schema options
-    const hasExistOption = schemaTypeOptions.exists === true;
+    //derive exist schema options
+    const existOptions = normalizeExistOption(schemaTypeOptions.exists);
 
     //check if is allow exist schema type
-    const checkExist = hasRef && hasExistOption;
+    const checkExist = (hasRef && existOptions.exists);
 
     //handle `exist:true` schema options
     if (checkExist && _.isFunction(schemaType.validate)) {
@@ -127,7 +160,7 @@ module.exports = exports = function (schema /*, options*/ ) {
             }
 
           },
-          message: '{PATH} with id {VALUE} does not exists',
+          message: (existOptions.message || VALIDATOR_MESSAGE),
           type: VALIDATOR_TYPE
         });
       }
