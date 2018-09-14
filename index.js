@@ -21,10 +21,7 @@
  */
 
 
-/* @todo attach validator message to mongoose error messages */
 /* @todo support conditional exists */
-/* @todo support set fresh existed full document */
-/* @todo add ObjectId schema validations */
 
 
 /* dependencies */
@@ -37,31 +34,112 @@ const VALIDATOR_MESSAGE = '{PATH} with id {VALUE} does not exists';
 //handle exists schema option
 function normalizeExistOption(option) {
 
+  //const default
+  const defaults = { exists: false, refresh: false };
+
   //handle boolean options
   if (_.isBoolean(option)) {
-    return { exists: true };
+    return _.merge({}, defaults, { exists: true });
   }
 
   //handle array option
   if (_.isArray(option)) {
-    return {
+    return _.merge({}, {
       exists: _.first(option),
-      message: _.last(option),
-    };
+      message: _.last(option)
+    });
   }
 
   //handle object option
   if (_.isPlainObject(option)) {
-    return _.merge({}, { exists: true }, option);
+    return _.merge({}, defaults, { exists: true }, option);
   }
 
   //bounce if not understood option
-  return { exists: false };
+  return defaults;
 
 }
 
 
-module.exports = exports = function (schema /*, options*/ ) {
+function createValidator(schemaPath, schemaTypeOptions, existOptions) {
+
+  return function existsValidator(value, cb) {
+
+    //remember value if was array
+    const isArray = _.isArray(value);
+
+    //map value to array
+    let ids = [].concat(value);
+
+    //get objectid of the value
+    ids = _.map(ids, function (id) {
+      return _.get(id, '_id') || id;
+    });
+    ids = _.compact(ids);
+
+    //extend path validation with existence checks
+    if (ids && ids.length > 0) {
+
+      //obtain ref mongoose model
+      const Model = mongoose.model(schemaTypeOptions.ref);
+
+      //try to lookup for model(s) by their ids
+      let query = Model.find({ _id: { $in: ids } });
+
+      //select plus refreshable fields
+      if (existOptions.refresh) {
+        if (existOptions.select) {
+          query.select(existOptions.select);
+        }
+      }
+      //select only _id
+      else {
+        query.select('_id');
+      }
+      query.exec(function afterQueryExisting(error, docs) {
+
+        //handle query errors
+        if (error) {
+          cb(false /*, error*/ );
+        }
+
+        //handle ref(s) existence
+        else {
+
+          //check if documents already exist
+          if (docs && docs.length === ids.length) {
+
+            //update path with refresh value
+            if (existOptions.refresh) {
+              const _value = (isArray ? docs : _.first(docs));
+              if (_.isFunction(this.set)) {
+                this.set(schemaPath, _value);
+              }
+            }
+
+            cb(true);
+          }
+
+          //documents not saved already
+          else {
+            cb(false);
+          }
+
+        }
+
+      }.bind(this));
+    }
+
+    //continue if not ids
+    else {
+      cb(true);
+    }
+
+  };
+}
+
+
+module.exports = exports = function existsPlugin(schema /*, options*/ ) {
 
   /**
    * @name  exists
@@ -72,12 +150,15 @@ module.exports = exports = function (schema /*, options*/ ) {
    * @param {String} schemaPath schema path
    * @param {SchemaType} schemaType valid mongoose schema type
    */
-  function exists(schemaPath, schemaType) {
+  function exists(schemaPath, schemaType, parentPath) {
+
+    //update path name
+    schemaPath = _.compact([parentPath, schemaPath]).join('.');
 
     //handle sub-schema
     if (schemaType.schema) {
       schemaType.schema.eachPath(function (_schemaPath, _schemaType) {
-        exists(_schemaPath, _schemaType);
+        exists(_schemaPath, _schemaType, schemaPath);
       });
     }
 
@@ -96,7 +177,7 @@ module.exports = exports = function (schema /*, options*/ ) {
     //check if is allow exist schema type
     const checkExist = (hasRef && existOptions.exists);
 
-    //handle `exist:true` schema options
+    //handle `exist` schema options
     if (checkExist && _.isFunction(schemaType.validate)) {
 
       //check if exist validator already added to path
@@ -107,59 +188,8 @@ module.exports = exports = function (schema /*, options*/ ) {
       if (!hasValidator) {
         schemaType.validate({
           isAsync: true,
-          validator: function (value, cb) {
-
-            //map value to array
-            let ids = [].concat(value);
-
-            //get objectid of the value
-            ids = _.map(ids, function (id) {
-              return _.get(id, '_id') || id;
-            });
-            ids = _.compact(ids);
-
-            //extend path validation with existence checks
-            if (ids && ids.length > 0) {
-
-              //obtain ref mongoose model
-              const Model = mongoose.model(schemaTypeOptions.ref);
-
-              //try to lookup for model(s) by their ids
-              Model
-                .find({ _id: { $in: ids } })
-                .select('_id')
-                .lean()
-                .exec(function (error, docs) {
-
-                  //handle query errors
-                  if (error) {
-                    cb(false /*, error*/ );
-                  }
-
-                  //handle ref(s) existence
-                  else {
-
-                    //check if documents already exist
-                    if (docs && docs.length === ids.length) {
-                      cb(true);
-                    }
-
-                    //documents not saved already
-                    else {
-                      cb(false);
-                    }
-
-                  }
-
-                });
-            }
-
-            //continue if not ids
-            else {
-              cb(true);
-            }
-
-          },
+          validator: createValidator(schemaPath, schemaTypeOptions,
+            existOptions),
           message: (existOptions.message || VALIDATOR_MESSAGE),
           type: VALIDATOR_TYPE
         });

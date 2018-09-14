@@ -1,14 +1,14 @@
 'use strict';
 
 
-/* force environment to be test */
+// force test environment
 process.env.NODE_ENV = 'test';
 
 
-/* setup mongoose */
+// setup mongoose
 const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
-// mongoose.set('debug', true);;
+// mongoose.set('debug', true);
 
 
 function wipe(done) {
@@ -21,7 +21,7 @@ function wipe(done) {
 
 
 //setup database
-before(function (done) {
+before((done) => {
   mongoose.connect('mongodb://localhost/mongoose-exists', { useNewUrlParser: true },
     done);
 });

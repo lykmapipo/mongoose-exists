@@ -24,7 +24,14 @@ const PersonSchema = new Schema({
   name: { type: String },
   father: { type: ObjectId, ref: 'Person', exists: true },
   mother: { type: ObjectId, ref: 'Person', exists: [true, 'NOT EXIST'] },
-  sister: { type: ObjectId, ref: 'Person', exists: { message: 'NOT EXIST' } },
+  sister: {
+    type: ObjectId,
+    ref: 'Person',
+    exists: {
+      refresh: true,
+      message: 'NOT EXIST'
+    }
+  },
   relatives: { type: [ObjectId], ref: 'Person', exists: true },
   referees: [{ type: ObjectId, ref: 'Person', exists: true }],
   friends: { type: [FriendSchema] },
@@ -126,9 +133,9 @@ describe('mongoose-exists', function () {
   it('should be able to create with a ref that already exists', (done) => {
     const person = {
       name: faker.company.companyName(),
-      father: father,
-      mother: mother,
-      sister: sister,
+      father: father._id,
+      mother: mother._id,
+      sister: sister._id,
       relatives: relatives,
       referees: referees,
       friends: friends,
@@ -140,6 +147,9 @@ describe('mongoose-exists', function () {
       expect(created).to.exist;
       expect(created._id).to.exist;
       expect(created.name).to.be.equal(person.name);
+      expect(created.father).to.be.eql(person.father);
+      expect(created.mother).to.be.eql(person.mother);
+      expect(created.sister._id).to.be.eql(person.sister);
       done(error, created);
     });
 
