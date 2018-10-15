@@ -15,7 +15,7 @@ mongoose validation to ensure referenced object id exists.
 
 ## Install
 ```sh
-$ npm install --save mongoose mongoose-exists
+$ npm install --save lodash mongoose mongoose-exists
 ```
 
 ## Usage
