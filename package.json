@@ -1,6 +1,6 @@
 {
   "name": "mongoose-exists",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "mongoose validation to ensure referenced object id exists",
   "keywords": [
     "lykmapipo",
@@ -48,11 +48,11 @@
     "jshint-stylish": "^2.2.1",
     "lodash": "^4.17.11",
     "mocha": "^5.2.0",
-    "mongoose": "^5.3.3"
+    "mongoose": "^5.3.10"
   },
   "peerDependencies": {
     "lodash": "^4.17.11",
-    "mongoose": "^5.3.3"
+    "mongoose": "^5.3.10"
   },
   "dependencies": {}
 }
