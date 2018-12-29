@@ -1,6 +1,6 @@
 {
   "name": "mongoose-exists",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "mongoose validation to ensure referenced object id exists",
   "keywords": [
     "lykmapipo",
@@ -46,13 +46,13 @@
     "grunt-contrib-watch": "^1.1.0",
     "grunt-mocha-test": "^0.13.3",
     "jshint-stylish": "^2.2.1",
-    "lodash": "^4.17.11",
     "mocha": "^5.2.0",
-    "mongoose": "^5.3.10"
+    "mongoose": ">=5.4.1"
   },
   "peerDependencies": {
-    "lodash": "^4.17.11",
-    "mongoose": "^5.3.10"
+    "mongoose": ">=5.4.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "lodash": ">=4.17.11"
+  }
 }
