@@ -10,9 +10,6 @@ const ObjectId = Schema.Types.ObjectId;
 const faker = require('faker');
 const expect = require('chai').expect;
 
-/* use as global plugin */
-// mongoose.plugin(require(path.join(__dirname, '..')));
-
 
 /* prepare schemas */
 const FriendSchema = new Schema({
@@ -41,7 +38,7 @@ PersonSchema.plugin(require(path.join(__dirname, '..')));
 const Person = mongoose.model('Person', PersonSchema);
 
 
-describe('mongoose-exists', function () {
+describe('mongoose-exists', () => {
 
   let father = { name: faker.company.companyName() };
   let mother = { name: faker.company.companyName() };
