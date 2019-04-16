@@ -26,7 +26,7 @@
 
 /* dependencies */
 const _ = require('lodash');
-const mongoose = require('mongoose');
+const { model } = require('@lykmapipo/mongoose-common');
 const VALIDATOR_TYPE = 'exists';
 const VALIDATOR_MESSAGE = '{PATH} with id {VALUE} does not exists';
 
@@ -81,7 +81,7 @@ function createValidator(schemaPath, schemaTypeOptions, existOptions) {
     if (ids && ids.length > 0) {
 
       //obtain ref mongoose model
-      const Model = mongoose.model(schemaTypeOptions.ref);
+      const Model = model(schemaTypeOptions.ref);
 
       //try to lookup for model(s) by their ids
       let query = Model.find({ _id: { $in: ids } });
@@ -164,9 +164,11 @@ module.exports = exports = function existsPlugin(schema /*, options*/ ) {
 
     //collect schemaType options
     let schemaTypeOptions = {};
-    schemaTypeOptions = _.merge({}, schemaType.options); //normal
+    //from normal options
+    schemaTypeOptions = _.merge({}, schemaType.options);
+    //from caster options
     schemaTypeOptions =
-      _.merge({}, schemaTypeOptions, _.get(schemaType, 'caster.options')); //caster
+      _.merge({}, schemaTypeOptions, _.get(schemaType, 'caster.options'));
 
     //ensure schema type is objectid `ref`
     const hasRef = !_.isEmpty(schemaTypeOptions.ref);
