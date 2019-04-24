@@ -40,7 +40,8 @@ const PersonSchema = new Schema({
     type: ObjectId,
     ref: 'Person',
     exists: {
-      refresh: true, //will check and set sister
+      refresh: true,
+      default: { name: {$eq: 'Lisa'} }
       message: 'NOT EXIST'
     }
   },
