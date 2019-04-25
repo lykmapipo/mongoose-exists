@@ -6,65 +6,36 @@
 
 mongoose validation to ensure referenced object id exists.
 
-*Note!: Path to be checked for existance must have `ref` and `exists` options*
-
 ## Requirements
 
-- NodeJS v6.5+
-- mongoose v4.9.0+
+- NodeJS v10+
+- mongoose v5.5+
 
 ## Install
 ```sh
-$ npm install --save lodash mongoose mongoose-exists
+$ npm install --save mongoose-exists
 ```
 
 ## Usage
 
-```javascript
+```js
 const mongoose = require('mongoose');
 const exists = require('mongoose-exists');
-const Schema = mongoose.Schema;
 
-...
-
-const FriendSchema = new Schema({
-  type: { type: String },
-  person: { type: ObjectId, ref: 'Person', exists: true }
-});
-
-const PersonSchema = new Schema({
-  name: { type: String },
-  father: { type: ObjectId, ref: 'Person', exists: true },
-  mother: { type: ObjectId, ref: 'Person', exists: [true, 'NOT EXIST'] },
-  sister: {
-    type: ObjectId,
-    ref: 'Person',
-    exists: {
-      refresh: true,
-      default: { name: {$eq: 'Lisa'} }
-      message: 'NOT EXIST'
-    }
-  },
-  relatives: { type: [ObjectId], ref: 'Person', exists: true },
-  referees: [{ type: ObjectId, ref: 'Person', exists: true }],
-  friends: { type: [FriendSchema] },
-  neighbours: [FriendSchema]
+const PersonSchema = new mongoose.Schema({
+    name: { type: String },
+    father: { type: ObjectId, ref: 'Person', exists: true },
+    mother: { type: ObjectId, ref: 'Person', exists: { refresh: true } }
 });
 PersonSchema.plugin(exists);
 
-...
-
-Person.create({}, function (error) {
-  expect(error).to.exist;
-  expect(error.errors.father).to.exist;
-  expect(error.name).to.be.equal('ValidationError');
-  expect(error.errors.father.message)
-    .to.be.equal('father with id ' + person.father +
-      ' does not exists');
+Person.create({}, function(error, created) {
+    expect(error).to.exist;
+    expect(error.errors.father).to.exist;
+    expect(error.name).to.be.equal('ValidationError');
+    expect(error.errors.father.message)
+        .to.be.equal(`father with id ${person.father} does not exists`);
 });
-
-...
-
 ```
 
 ## Testing
