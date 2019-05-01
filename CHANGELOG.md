@@ -1,3 +1,11 @@
+#### 0.6.8 (2019-05-01)
+
+##### Chores
+
+* **ci:**  force latest nodejs ([5d0f902a](https://github.com/lykmapipo/mongoose-exists/commit/5d0f902a7994dbb2bf93a8a6edff7752e1b8b6e4))
+* **.npmrc:**  prevent npm version to commit and tag version ([e2625c73](https://github.com/lykmapipo/mongoose-exists/commit/e2625c73b5f7272460d7aa8513c22292470e41fb))
+* **deps:**  force latest version & audit fix ([6d5dd120](https://github.com/lykmapipo/mongoose-exists/commit/6d5dd120c7997bbc6aeb4870e85a1b944487e5d2))
+
 #### 0.6.7 (2019-04-25)
 
 ##### Chores
