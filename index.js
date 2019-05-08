@@ -61,7 +61,7 @@ const normalizeExistOption = option => {
 };
 
 
-function createValidator(schemaPath, schemaTypeOptions, existOptions) {
+const createValidator = (schemaPath, schemaTypeOptions, existOptions) => {
 
   return function existsValidator(value, cb) {
 
@@ -136,7 +136,7 @@ function createValidator(schemaPath, schemaTypeOptions, existOptions) {
     }
 
   };
-}
+};
 
 
 module.exports = exports = function existsPlugin(schema /*, options*/ ) {
@@ -165,10 +165,10 @@ module.exports = exports = function existsPlugin(schema /*, options*/ ) {
     //collect schemaType options
     let schemaTypeOptions = {};
     //from normal options
-    schemaTypeOptions = _.merge({}, schemaType.options);
+    schemaTypeOptions = mergeObjects(schemaType.options);
     //from caster options
     schemaTypeOptions =
-      _.merge({}, schemaTypeOptions, _.get(schemaType, 'caster.options'));
+      mergeObjects(schemaTypeOptions, _.get(schemaType, 'caster.options'));
 
     //ensure schema type is objectid `ref`
     const hasRef = !_.isEmpty(schemaTypeOptions.ref);
