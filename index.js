@@ -26,25 +26,26 @@
 
 /* dependencies */
 const _ = require('lodash');
+const { mergeObjects } = require('@lykmapipo/common');
 const { model } = require('@lykmapipo/mongoose-common');
 const VALIDATOR_TYPE = 'exists';
 const VALIDATOR_MESSAGE = '{PATH} with id {VALUE} does not exists';
 
 
 //handle exists schema option
-function normalizeExistOption(option) {
+const normalizeExistOption = option => {
 
   //const default
   const defaults = { exists: false, refresh: false };
 
   //handle boolean options
   if (_.isBoolean(option)) {
-    return _.merge({}, defaults, { exists: true });
+    return mergeObjects(defaults, { exists: true });
   }
 
   //handle array option
   if (_.isArray(option)) {
-    return _.merge({}, {
+    return mergeObjects({
       exists: _.first(option),
       message: _.last(option)
     });
@@ -52,13 +53,12 @@ function normalizeExistOption(option) {
 
   //handle object option
   if (_.isPlainObject(option)) {
-    return _.merge({}, defaults, { exists: true }, option);
+    return mergeObjects(defaults, { exists: true }, option);
   }
 
   //bounce if not understood option
   return defaults;
-
-}
+};
 
 
 function createValidator(schemaPath, schemaTypeOptions, existOptions) {
