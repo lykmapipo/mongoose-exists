@@ -71,7 +71,7 @@ describe('mongoose-exists', () => {
     });
   });
 
-  it.only('should be able to create with refs that already exists', done => {
+  it('should be able to create with refs that already exists', done => {
     const person = {
       name: faker.company.companyName(),
       father: father._id,

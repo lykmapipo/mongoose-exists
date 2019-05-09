@@ -20,210 +20,179 @@
  * 
  */
 
-
-/* @todo support conditional exists */
-
-
 /* dependencies */
 const _ = require('lodash');
-const { mergeObjects } = require('@lykmapipo/common');
-const { model } = require('@lykmapipo/mongoose-common');
+const { mergeObjects, uniq } = require('@lykmapipo/common');
+const {
+  eachPath,
+  model,
+  schemaTypeOptionOf
+} = require('@lykmapipo/mongoose-common');
 const VALIDATOR_TYPE = 'exists';
 const VALIDATOR_MESSAGE = '{PATH} with id {VALUE} does not exists';
 
-const prepareCriteria = (ids, options) => {
-  // TODO handle exists.if/exists.when/exists.and
-  const criteria = { $or: [] };
-  // find by ids
-  if (!_.isEmpty(ids)) {
-    criteria.$or = [{ _id: { $in: ids } }, ...criteria.$or];
+
+// build existance check query
+const prepareQuery = (ids, schemaTypeOptions) => {
+  // obtain options
+  const { ref, exists } = schemaTypeOptions;
+  const { match = {}, options = {}, select = '_id' } = exists;
+
+  // obtain ref model
+  const Model = model(ref);
+
+  // build exist check query
+  let query;
+  if (Model) {
+    // prepare criteria
+    let criteria = {};
+
+    // find default
+    if (exists.default) {
+      criteria = match;
+    }
+    // find by ids & match
+    else {
+      criteria = (
+        _.isEmpty(match) ?
+        ({ _id: { $in: ids } }) :
+        ({ $and: [{ _id: { $in: ids } }, match] })
+      );
+    }
+
+    // create query
+    query = Model.find(criteria).select(select).setOptions(options);
   }
-  // find by default
-  if (!_.isEmpty(options) && !_.isEmpty(options.default)) {
-    criteria.$or = [...criteria.$or, options.default];
-  }
-  console.log('criteria', JSON.stringify(criteria));
-  // return composed criteria
-  return criteria;
+
+  // return query
+  return query;
 };
 
-//handle exists schema option
-const normalizeExistOption = option => {
 
-  //const default
-  const defaults = { exists: false, refresh: false, select: '_id' };
+// normalize exists schema option
+const normalizeOptions = optns => {
+  // prepare defaults
+  const defaults = ({
+    exists: false, // signal if plugin enabled
+    refresh: false, // whether to refresh ref
+    default: false, // whether to set default
+    select: '_id', // fields to select
+    match: {}, // additional conditions to apply
+    options: {}, // exist query options
+    message: VALIDATOR_MESSAGE // error message
+  });
 
-  //handle boolean options
-  if (_.isBoolean(option)) {
+  // handle boolean options (exists: true)
+  if (_.isBoolean(optns)) {
     return mergeObjects(defaults, { exists: true });
   }
 
-  //handle array option
-  if (_.isArray(option)) {
-    return mergeObjects({
-      exists: _.first(option),
-      message: _.last(option)
-    });
+  // handle array option
+  if (_.isArray(optns)) {
+    const exists = _.first(optns);
+    const message = _.last(optns);
+    return mergeObjects(defaults, { exists, message });
   }
 
-  //handle object option
-  if (_.isPlainObject(option)) {
-    return mergeObjects(defaults, { exists: true }, option);
+  // handle object option
+  if (_.isPlainObject(optns)) {
+    return mergeObjects(defaults, { exists: true }, optns);
   }
 
-  //bounce if not understood option
+  // bounce if not understood option
   return defaults;
 };
 
 
-const createValidator = (schemaPath, schemaTypeOptions, existOptions) => {
-
+// create ref exists validator
+const createValidator = (schemaPath, schemaTypeOptions) => {
+  // dont use arrow: this will be binded to instance
   return function existsValidator(value, cb) {
-
-    //remember value if was array
+    // remember value if was array
+    // TODO: use schematype to determine if is array path
     const isArray = _.isArray(value);
 
-    //map value to array
-    let ids = [].concat(value);
+    // collect value as set of unique ids
+    const ids = uniq(_.map([].concat(value), id => _.get(id, '_id') || id));
 
-    //get objectid of the value
-    ids = _.map(ids, id => _.get(id, '_id') || id);
-    ids = _.compact(ids);
-
-    //extend path validation with existence checks
+    // check if should build validator
     const shouldValidate =
-      (!_.isEmpty(existOptions.default) || (ids && ids.length > 0));
-    console.log(schemaPath, shouldValidate, ids, value, existOptions);
-    if (shouldValidate) {
+      (schemaTypeOptions.exists.default || !_.isEmpty(ids));
 
-      //obtain ref mongoose model
-      const Model = model(schemaTypeOptions.ref);
-
-      //try to lookup for model(s) by their ids
-      let query = Model.find(prepareCriteria(ids, existOptions));
-
-      //select plus refreshable fields
-      // TODO simplify field selections using select option only
-      if (existOptions.refresh || existOptions.default) {
-        query.select(existOptions.select);
-      }
-      //select only _id
-      else {
-        query.select('_id');
-      }
-      query.exec(function afterQueryExisting(error, docs) {
-
-        //handle query errors
-        if (error) {
-          console.log(error);
-          cb(false /*, error*/ );
-        }
-
-        //handle ref(s) existence
-        else {
-
-          //check if documents already exist
-          // if (docs && docs.length === ids.length) {
-          console.log(schemaPath, docs);
-          if (docs && docs.length > 0) {
-
-            //update path with refresh value
-            if (existOptions.refresh || existOptions.default) {
-              const _value = (isArray ? docs : _.first(docs));
-              if (_.isFunction(this.set)) {
-                this.set(schemaPath, _value);
-              }
-            }
-
-            cb(true);
-          }
-
-          //documents not saved already
-          else {
-            cb(false);
-          }
-
-        }
-
-      }.bind(this));
+    // back-off in case no ids or default not applied
+    if (!shouldValidate) {
+      return cb(true);
     }
 
-    //continue if not ids
-    else {
-      cb(true);
+    // prepare existance check query
+    const query = prepareQuery(ids, schemaTypeOptions);
+
+    // back-off if no valid query
+    if (!query) {
+      return cb(true);
     }
 
+    // execute existence check query
+    query.exec(function afterQueryExisting(error, docs) {
+      // back-off on query errors
+      if (error) {
+        return cb(error);
+      }
+
+      // back-off documents not saved already
+      if (_.isEmpty(docs)) {
+        return cb(false);
+      }
+
+      // handle documents already exist
+      if (schemaTypeOptions.exists.refresh) {
+        const _value = (isArray ? docs : _.first(docs));
+        if (_.isFunction(this.set)) {
+          //update path with refresh value
+          this.set(schemaPath, _value);
+        }
+      }
+      // return refs exist
+      return cb(true);
+    }.bind(this)); // bind to model instance on query results
   };
 };
 
 
-module.exports = exports = function existsPlugin(schema /*, options*/ ) {
+// mongoose exists plugin
+const existsPlugin = (schema /*, options*/ ) => {
+  // iterate through each schema path, check for ObjectId(ref) 
+  // schema fields and apply exists plugin to a schema type(s) 
+  // with `exists:true` options
+  eachPath(schema, (schemaPath, schemaType) => {
+    // collect schemaType options
+    const schemaTypeOptions = schemaTypeOptionOf(schemaType);
 
-  /**
-   * @name  exists
-   * @description iterate though each schema path, check for ObjectId(ref) 
-   * schema fields and apply exists plugin to a schema type(s) 
-   * with `exists:true` options
-   *              
-   * @param {String} schemaPath schema path
-   * @param {SchemaType} schemaType valid mongoose schema type
-   */
-  function exists(schemaPath, schemaType, parentPath) {
+    // normalize exists schema options
+    schemaTypeOptions.exists = normalizeOptions(schemaTypeOptions.exists);
 
-    //update path name
-    schemaPath = _.compact([parentPath, schemaPath]).join('.');
+    // check if should apply exist validator
+    const { exists, ref } = schemaTypeOptions;
+    const shouldApply = (!_.isEmpty(ref) && exists.exists);
 
-    //handle sub-schema
-    if (schemaType.schema) {
-      schemaType.schema.eachPath(function (_schemaPath, _schemaType) {
-        exists(_schemaPath, _schemaType, schemaPath);
-      });
-    }
-
-    //collect schemaType options
-    let schemaTypeOptions = {};
-    //from normal options
-    schemaTypeOptions = mergeObjects(schemaType.options);
-    //from caster options
-    schemaTypeOptions =
-      mergeObjects(schemaTypeOptions, _.get(schemaType, 'caster.options'));
-
-    //ensure schema type is objectid `ref`
-    const hasRef = !_.isEmpty(schemaTypeOptions.ref);
-
-    //derive exist schema options
-    const existOptions = normalizeExistOption(schemaTypeOptions.exists);
-
-    //check if is allow exist schema type
-    const checkExist = (hasRef && existOptions.exists);
-
-    //handle `exist` schema options
-    if (checkExist && _.isFunction(schemaType.validate)) {
-
-      //check if exist validator already added to path
+    // apply `exists` plugin
+    if (shouldApply && _.isFunction(schemaType.validate)) {
+      // check if exists validator already added to schema path
       const hasValidator =
         _.find(schemaType.validators, { type: VALIDATOR_TYPE });
 
-      //add model exists async validation
+      // add ref exists async validation to a schema path
       if (!hasValidator) {
-        // if (existOptions.default) {
-        //   console.log('set default');
-        //   schemaType.default(null);
-        // }
         schemaType.validate({
           isAsync: true,
-          validator: createValidator(schemaPath, schemaTypeOptions,
-            existOptions),
-          message: (existOptions.message || VALIDATOR_MESSAGE),
+          validator: createValidator(schemaPath, schemaTypeOptions),
+          message: schemaTypeOptions.exists.message,
           type: VALIDATOR_TYPE
         });
       }
-
     }
-
-  }
-
-  //check paths for existence
-  schema.eachPath(exists);
-
+  });
 };
+
+/* export exists plugin */
+module.exports = exports = existsPlugin;
