@@ -31,12 +31,27 @@ const { model } = require('@lykmapipo/mongoose-common');
 const VALIDATOR_TYPE = 'exists';
 const VALIDATOR_MESSAGE = '{PATH} with id {VALUE} does not exists';
 
+const prepareCriteria = (ids, options) => {
+  // TODO handle exists.if/exists.when/exists.and
+  const criteria = { $or: [] };
+  // find by ids
+  if (!_.isEmpty(ids)) {
+    criteria.$or = [{ _id: { $in: ids } }, ...criteria.$or];
+  }
+  // find by default
+  if (!_.isEmpty(options) && !_.isEmpty(options.default)) {
+    criteria.$or = [...criteria.$or, options.default];
+  }
+  console.log('criteria', JSON.stringify(criteria));
+  // return composed criteria
+  return criteria;
+};
 
 //handle exists schema option
 const normalizeExistOption = option => {
 
   //const default
-  const defaults = { exists: false, refresh: false };
+  const defaults = { exists: false, refresh: false, select: '_id' };
 
   //handle boolean options
   if (_.isBoolean(option)) {
@@ -72,25 +87,25 @@ const createValidator = (schemaPath, schemaTypeOptions, existOptions) => {
     let ids = [].concat(value);
 
     //get objectid of the value
-    ids = _.map(ids, function (id) {
-      return _.get(id, '_id') || id;
-    });
+    ids = _.map(ids, id => _.get(id, '_id') || id);
     ids = _.compact(ids);
 
     //extend path validation with existence checks
-    if (ids && ids.length > 0) {
+    const shouldValidate =
+      (!_.isEmpty(existOptions.default) || (ids && ids.length > 0));
+    console.log(schemaPath, shouldValidate, ids, value, existOptions);
+    if (shouldValidate) {
 
       //obtain ref mongoose model
       const Model = model(schemaTypeOptions.ref);
 
       //try to lookup for model(s) by their ids
-      let query = Model.find({ _id: { $in: ids } });
+      let query = Model.find(prepareCriteria(ids, existOptions));
 
       //select plus refreshable fields
-      if (existOptions.refresh) {
-        if (existOptions.select) {
-          query.select(existOptions.select);
-        }
+      // TODO simplify field selections using select option only
+      if (existOptions.refresh || existOptions.default) {
+        query.select(existOptions.select);
       }
       //select only _id
       else {
@@ -100,6 +115,7 @@ const createValidator = (schemaPath, schemaTypeOptions, existOptions) => {
 
         //handle query errors
         if (error) {
+          console.log(error);
           cb(false /*, error*/ );
         }
 
@@ -107,10 +123,12 @@ const createValidator = (schemaPath, schemaTypeOptions, existOptions) => {
         else {
 
           //check if documents already exist
-          if (docs && docs.length === ids.length) {
+          // if (docs && docs.length === ids.length) {
+          console.log(schemaPath, docs);
+          if (docs && docs.length > 0) {
 
             //update path with refresh value
-            if (existOptions.refresh) {
+            if (existOptions.refresh || existOptions.default) {
               const _value = (isArray ? docs : _.first(docs));
               if (_.isFunction(this.set)) {
                 this.set(schemaPath, _value);
@@ -188,6 +206,10 @@ module.exports = exports = function existsPlugin(schema /*, options*/ ) {
 
       //add model exists async validation
       if (!hasValidator) {
+        // if (existOptions.default) {
+        //   console.log('set default');
+        //   schemaType.default(null);
+        // }
         schemaType.validate({
           isAsync: true,
           validator: createValidator(schemaPath, schemaTypeOptions,
