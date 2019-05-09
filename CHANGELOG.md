@@ -1,3 +1,23 @@
+#### 0.7.0 (2019-05-09)
+
+##### Chores
+
+* **deps:**  force latest version & audit fix ([8c1b426f](https://github.com/lykmapipo/mongoose-exists/commit/8c1b426f3486ebac3d1328408e0a1f5a32b248fa))
+
+##### New Features
+
+*  implement initial default logics ([ae821906](https://github.com/lykmapipo/mongoose-exists/commit/ae8219060d3d8b2b545fe130e89efc90cb8fd043))
+
+##### Bug Fixes
+
+*  allow patch set if default enabled ([f5dd372d](https://github.com/lykmapipo/mongoose-exists/commit/f5dd372dd0a1a81c4d9de9edfec6179b9b2988d5))
+
+##### Refactors
+
+*  allow default and match conditions ([8b997ffa](https://github.com/lykmapipo/mongoose-exists/commit/8b997ffa41694d59f355595f7e1c6a77c8193614))
+*  use merge objects ([66d5f893](https://github.com/lykmapipo/mongoose-exists/commit/66d5f893ffae3146bcd580d305f7ce5c056a81d3))
+*  use arrow & mergeObjects on option normalization ([6a519d70](https://github.com/lykmapipo/mongoose-exists/commit/6a519d70345326b476f8a3e8cf03ca7fd4269f61))
+
 #### 0.6.8 (2019-05-01)
 
 ##### Chores
