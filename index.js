@@ -145,7 +145,9 @@ const createValidator = (schemaPath, schemaTypeOptions) => {
       }
 
       // handle documents already exist
-      if (schemaTypeOptions.exists.refresh) {
+      const shouldSet =
+        (schemaTypeOptions.exists.refresh || schemaTypeOptions.exists.default);
+      if (shouldSet) {
         const _value = (isArray ? docs : _.first(docs));
         if (_.isFunction(this.set)) {
           //update path with refresh value

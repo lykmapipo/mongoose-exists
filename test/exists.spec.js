@@ -35,7 +35,7 @@ const Person = createTestModel({
   coach: {
     type: ObjectId,
     ref: 'Person',
-    exists: { default: { father: null }, select: { name: 1 } }
+    exists: { default: true, match: { father: null }, select: { name: 1 } }
   }
 }, { modelName: 'Person' }, require(path.join(__dirname, '..')));
 
@@ -80,13 +80,15 @@ describe('mongoose-exists', () => {
       relatives: relatives,
       referees: referees,
       friends: friends,
-      neighbours: neighbours
+      neighbours: neighbours,
+      coach: null
     };
 
     Person.create(person, (error, created) => {
       expect(error).to.not.exist;
       expect(created).to.exist;
       expect(created._id).to.exist;
+      expect(created.coach).to.exist;
       expect(created.name).to.be.equal(person.name);
       expect(created.father).to.be.eql(person.father);
       expect(created.mother).to.be.eql(person.mother);
