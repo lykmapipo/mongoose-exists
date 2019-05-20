@@ -1,3 +1,9 @@
+#### 0.7.2 (2019-05-20)
+
+##### Chores
+
+* **deps:**  force latest version & audit fix ([4d4b2ac8](https://github.com/lykmapipo/mongoose-exists/commit/4d4b2ac8f637c91760969a10e90ab3ba2531a204))
+
 #### 0.7.1 (2019-05-12)
 
 ##### Chores
