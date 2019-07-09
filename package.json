@@ -39,8 +39,8 @@
     }
   ],
   "devDependencies": {
-    "@lykmapipo/mongoose-faker": "^0.9.7",
-    "@lykmapipo/mongoose-test-helpers": ">=0.7.13",
+    "@lykmapipo/mongoose-faker": "^0.9.9",
+    "@lykmapipo/mongoose-test-helpers": ">=0.7.15",
     "chai": "^4.2.0",
     "faker": "^4.1.0",
     "grunt": "^1.0.4",
@@ -50,14 +50,15 @@
     "handlebars": "^4.1.2",
     "jshint-stylish": "^2.2.1",
     "mocha": "^6.1.4",
-    "mongoose": ">=5.6.0"
+    "mongoose": ">=5.6.4",
+    "shelljs": "^0.8.3"
   },
   "peerDependencies": {
-    "mongoose": ">=5.6.0"
+    "mongoose": ">=5.6.4"
   },
   "dependencies": {
-    "@lykmapipo/common": ">=0.22.0",
-    "@lykmapipo/mongoose-common": ">=0.25.4",
+    "@lykmapipo/common": ">=0.22.3",
+    "@lykmapipo/mongoose-common": ">=0.25.8",
     "lodash": ">=4.17.11"
   }
 }
