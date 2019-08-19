@@ -1,3 +1,13 @@
+#### 0.8.0 (2019-08-19)
+
+##### Chores
+
+* **deps:**  force latest version & audit fix ([df5569e4](https://github.com/lykmapipo/mongoose-exists/commit/df5569e45fff9cd3478a39005f435e0b17f8466f))
+
+##### New Features
+
+*  disable autopopulation by default ([ca28bb87](https://github.com/lykmapipo/mongoose-exists/commit/ca28bb87a0dab0f028e4154cd134b625f08c7074))
+
 #### 0.7.6 (2019-08-13)
 
 ##### Chores
