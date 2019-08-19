@@ -78,7 +78,7 @@ const normalizeOptions = optns => {
     default: false, // whether to set default
     select: '_id', // fields to select
     match: {}, // additional conditions to apply
-    options: {}, // exist query options
+    options: { autopopulate: false }, // exist query options
     message: VALIDATOR_MESSAGE // error message
   });
 
