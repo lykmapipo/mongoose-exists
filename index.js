@@ -22,7 +22,7 @@
 
 /* dependencies */
 const _ = require('lodash');
-const { mergeObjects, uniq } = require('@lykmapipo/common');
+const { idOf, mergeObjects, uniq } = require('@lykmapipo/common');
 const {
   eachPath,
   model,
@@ -107,56 +107,60 @@ const normalizeOptions = optns => {
 // create ref exists validator
 const createValidator = (schemaPath, schemaTypeOptions) => {
   // dont use arrow: this will be binded to instance
-  return function existsValidator(value, cb) {
-    // remember value if was array
-    // TODO: use schematype to determine if is array path
-    const isArray = _.isArray(value);
+  return function existsValidator(value) {
+    return new Promise(function checkIfExists(resolve, reject) {
+      // remember value if was array
+      // TODO: use schematype to determine if is array path
+      const isArray = _.isArray(value);
 
-    // collect value as set of unique ids
-    const ids = uniq(_.map([].concat(value), id => _.get(id, '_id') || id));
+      // collect value as set of unique ids
+      const ids =
+        uniq(_.map([].concat(value), id => idOf(id) || id));
 
-    // check if should build validator
-    const shouldValidate =
-      (schemaTypeOptions.exists.default || !_.isEmpty(ids));
+      // check if should build validator
+      const shouldValidate =
+        (schemaTypeOptions.exists.default || !_.isEmpty(ids));
 
-    // back-off in case no ids or default not applied
-    if (!shouldValidate) {
-      return cb(true);
-    }
-
-    // prepare existance check query
-    const query = prepareQuery(ids, schemaTypeOptions);
-
-    // back-off if no valid query
-    if (!query) {
-      return cb(true);
-    }
-
-    // execute existence check query
-    query.exec(function afterQueryExisting(error, docs) {
-      // back-off on query errors
-      if (error) {
-        return cb(error);
+      // back-off in case no ids or default not applied
+      if (!shouldValidate) {
+        return resolve(true);
       }
 
-      // back-off documents not saved already
-      if (_.isEmpty(docs)) {
-        return cb(false);
+      // prepare existance check query
+      const query = prepareQuery(ids, schemaTypeOptions);
+
+      // back-off if no valid query
+      if (!query) {
+        return resolve(true);
       }
 
-      // handle documents already exist
-      const shouldSet =
-        (schemaTypeOptions.exists.refresh || schemaTypeOptions.exists.default);
-      if (shouldSet) {
-        const _value = (isArray ? docs : _.first(docs));
-        if (_.isFunction(this.set)) {
-          //update path with refresh value
-          this.set(schemaPath, _value);
+      // execute existence check query
+      query.exec(function afterQueryExisting(error, docs) {
+        // back-off on query errors
+        if (error) {
+          return reject(error);
         }
-      }
-      // return refs exist
-      return cb(true);
-    }.bind(this)); // bind to model instance on query results
+
+        // back-off documents not saved already
+        if (_.isEmpty(docs)) {
+          return resolve(false);
+        }
+
+        // handle documents already exist
+        const shouldSet =
+          (schemaTypeOptions.exists.refresh || schemaTypeOptions.exists
+            .default);
+        if (shouldSet) {
+          const _value = (isArray ? docs : _.first(docs));
+          if (_.isFunction(this.set)) {
+            //update path with refresh value
+            this.set(schemaPath, _value);
+          }
+        }
+        // return refs exist
+        return resolve(true);
+      }.bind(this)); // bind to model instance on query results
+    }.bind(this));
   };
 };
 
@@ -186,7 +190,6 @@ const existsPlugin = (schema /*, options*/ ) => {
       // add ref exists async validation to a schema path
       if (!hasValidator) {
         schemaType.validate({
-          isAsync: true,
           validator: createValidator(schemaPath, schemaTypeOptions),
           message: schemaTypeOptions.exists.message,
           type: VALIDATOR_TYPE

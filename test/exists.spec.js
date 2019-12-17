@@ -171,7 +171,7 @@ describe('mongoose-exists', () => {
     });
   });
 
-  it.skip('should fail to save with ref that not exists', done => {
+  it('should fail to save with ref that not exists', done => {
     const person = {
       name: faker.company.companyName(),
       father: father._id,
