@@ -1,3 +1,13 @@
+#### 0.9.0 (2019-12-17)
+
+##### Chores
+
+* **deps:**  force latest version & audit fix ([3a1fe28a](https://github.com/lykmapipo/mongoose-exists/commit/3a1fe28a5f82be63936967575fb8f04894d2f4fe))
+
+##### Refactors
+
+*  migrate validator to promise ([bc7efacd](https://github.com/lykmapipo/mongoose-exists/commit/bc7efacd4cf6574079f7ba2893f0559e2d47b26a))
+
 #### 0.8.8 (2019-12-11)
 
 ##### Chores
