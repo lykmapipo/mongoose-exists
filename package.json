@@ -1,6 +1,6 @@
 {
   "name": "mongoose-exists",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "mongoose validation to ensure referenced object id exists",
   "keywords": [
     "lykmapipo",
