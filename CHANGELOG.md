@@ -1,3 +1,14 @@
+#### 0.10.0 (2021-11-12)
+
+##### Chores
+
+* **release:**  compile latest source ([4b87eede](https://github.com/lykmapipo/mongoose-exists/commit/4b87eede2752386700c09d622f6d2c2fa38bc83f))
+* **deps:**  force to latest version ([8538ac5d](https://github.com/lykmapipo/mongoose-exists/commit/8538ac5d2b13ec69fe77ac426b8506e70a0be2b8))
+
+##### Refactors
+
+*  migrate to es6 ([60e433c9](https://github.com/lykmapipo/mongoose-exists/commit/60e433c95b575e623528ef2e0991fb18b7bf0bdf))
+
 #### 0.9.22 (2020-08-08)
 
 ##### Chores
