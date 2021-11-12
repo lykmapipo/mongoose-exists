@@ -1,35 +1,44 @@
 # mongoose-exists
 
-[![Build Status](https://travis-ci.org/lykmapipo/mongoose-exists.svg?branch=master)](https://travis-ci.org/lykmapipo/mongoose-exists)
-[![Dependency Status](https://img.shields.io/david/lykmapipo/mongoose-exists.svg?style=flat)](https://david-dm.org/lykmapipo/mongoose-exists)
-[![npm version](https://badge.fury.io/js/mongoose-exists.svg)](https://badge.fury.io/js/mongoose-exists)
+[![Build Status](https://app.travis-ci.com/lykmapipo/mongoose-exists.svg?branch=master)](https://app.travis-ci.com/lykmapipo/mongoose-exists)
+[![Dependencies Status](https://david-dm.org/lykmapipo/mongoose-exists.svg)](https://david-dm.org/lykmapipo/mongoose-exists)
+[![Coverage Status](https://coveralls.io/repos/github/lykmapipo/mongoose-exists/badge.svg?branch=master)](https://coveralls.io/github/lykmapipo/mongoose-exists?branch=master)
+[![GitHub License](https://img.shields.io/github/license/lykmapipo/mongoose-exists)](https://github.com/lykmapipo/mongoose-exists/blob/master/LICENSE)
 
-mongoose validation to ensure referenced object id exists.
+[![Commitizen Friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
+[![Code Style](https://badgen.net/badge/code%20style/airbnb/ff5a5f?icon=airbnb)](https://github.com/airbnb/javascript)
+[![npm version](https://img.shields.io/npm/v/mongoose-exists)](https://www.npmjs.com/package/mongoose-exists)
+
+mongoose plugin to add aggregations behaviour. 
 
 ## Requirements
 
-- NodeJS v10+
-- mongoose v5.5+
+- [NodeJS v13+](https://nodejs.org)
+- [Npm v6.12+](https://www.npmjs.com/)
+- [MongoDB v4+](https://www.mongodb.com/)
+- [Mongoose v6+](https://github.com/Automattic/mongoose)
 
 ## Install
 ```sh
-$ npm install --save mongoose-exists
+$ npm install --save mongoose mongoose-exists
 ```
 
 ## Usage
 
-```js
-const mongoose = require('mongoose');
-const exists = require('mongoose-exists');
+```javascript
+import mongoose from 'mongoose';
+import exists from 'mongoose-exists';
 
 const PersonSchema = new mongoose.Schema({
-    name: { type: String },
-    father: { type: ObjectId, ref: 'Person', exists: true },
-    mother: { type: ObjectId, ref: 'Person', exists: { refresh: true } }
+  name: { type: String },
+  father: { type: ObjectId, ref: 'Person', exists: true },
+  mother: { type: ObjectId, ref: 'Person', exists: { refresh: true } }
 });
 PersonSchema.plugin(exists);
+const Person = mongoose.model('Person', PersonSchema);
 
-Person.create({}, function(error, created) {
+Person.create({}, (error, created) => {
     expect(error).to.exist;
     expect(error.errors.father).to.exist;
     expect(error.name).to.be.equal('ValidationError');
@@ -56,7 +65,7 @@ It will be nice, if you open an issue first so that we can know what is going on
 ## Licence
 The MIT License (MIT)
 
-Copyright (c) 2015 lykmapipo & Contributors
+Copyright (c) lykmapipo & Contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
