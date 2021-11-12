@@ -10,7 +10,7 @@
 [![Code Style](https://badgen.net/badge/code%20style/airbnb/ff5a5f?icon=airbnb)](https://github.com/airbnb/javascript)
 [![npm version](https://img.shields.io/npm/v/mongoose-exists)](https://www.npmjs.com/package/mongoose-exists)
 
-mongoose plugin to add aggregations behaviour. 
+mongoose validation to ensure referenced object id exists.
 
 ## Requirements
 
