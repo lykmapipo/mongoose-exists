@@ -1,6 +1,6 @@
 {
   "name": "mongoose-exists",
-  "version": "0.9.22",
+  "version": "0.10.0",
   "description": "mongoose validation to ensure referenced object id exists",
   "main": "lib/index.js",
   "module": "es/index.js",
@@ -91,13 +91,13 @@
     "nyc": "^15.1.0",
     "prettier": "^2.4.1",
     "rimraf": "^3.0.2",
-    "rollup": "^2.59.0"
+    "rollup": "^2.60.0"
   },
   "peerDependencies": {},
   "dependencies": {
-    "@lykmapipo/common": ">=0.38.2",
-    "@lykmapipo/mongoose-common": ">=0.38.4",
-    "lodash": ">=4.17.19"
+    "@lykmapipo/common": ">=0.44.5",
+    "@lykmapipo/mongoose-common": ">=0.40.0",
+    "lodash": ">=4.17.21"
   },
   "engines": {
     "node": ">=8.11.1",
